@@ -1,40 +1,75 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/pages/api-reference/create-next-app).
+# ClientBase CRM 🚀
 
-## Getting Started
+Sistema de gestión de clientes y proyectos desarrollado con Next.js y Prisma.
 
-First, run the development server:
+## 📋 Descripción
+ClientBase es una aplicación web diseñada para freelancers y pequeñas empresas. Permite centralizar la información de contacto de los clientes y llevar un seguimiento detallado de los proyectos asignados a cada uno.
 
-```bash
+## 🛠️ Tecnologías Utilizadas
+- **Frontend:** Next.js (React), Tailwind CSS.
+- **Backend:** Next.js API Routes.
+- **Base de Datos:** SQLite (vía Prisma ORM).
+- **Control de Versiones:** Git & GitHub.
+
+## ✨ Funcionalidades
+1. **Gestión de Clientes (CRUD):**
+   - Registro de nuevos clientes.
+   - Listado y visualización de cartera.
+   - Edición de datos de contacto.
+   - Eliminación de registros.
+
+2. **Gestión de Proyectos (Relacional):**
+   - Creación de proyectos asignados a un cliente específico (Relación 1:N).
+   - Panel visual de tarjetas de proyectos.
+   - Eliminación en cascada (Si se borra un cliente, se borran sus proyectos).
+
+## 🚀 Instalación y Uso Local
+
+1. **Clonar el repositorio:**
+   ```bash
+   git clone [https://github.com/TU_USUARIO/client-base-crm.git](https://github.com/TU_USUARIO/client-base-crm.git)
+Instalar dependencias:
+
+Bash
+
+npm install
+Configurar Base de Datos:
+
+Bash
+
+npx prisma migrate dev --name init
+Correr el servidor:
+
+Bash
+
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+Abrir en el navegador: Visita http://localhost:3000
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-You can start editing the page by modifying `pages/index.js`. The page auto-updates as you edit the file.
+3.  Guarda el archivo.
+4.  Haz un último push rápido para subir este README:
+    ```bash
+    git add .
+    git commit -m "Actualizar documentacion README"
+    git push
+    ```
 
-[API routes](https://nextjs.org/docs/pages/building-your-application/routing/api-routes) can be accessed on [http://localhost:3000/api/hello](http://localhost:3000/api/hello). This endpoint can be edited in `pages/api/hello.js`.
+---
 
-The `pages/api` directory is mapped to `/api/*`. Files in this directory are treated as [API routes](https://nextjs.org/docs/pages/building-your-application/routing/api-routes) instead of React pages.
+### 💡 Consejos Finales para la Presentación
 
-This project uses [`next/font`](https://nextjs.org/docs/pages/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Si el profesor te pregunta, aquí tienes las "respuestas correctas":
 
-## Learn More
+1.  **"¿Qué base de datos usaron?"**
+    * *Tú:* "Usamos **SQLite** gestionada a través de **Prisma ORM**. Elegimos Prisma porque nos permite manejar las relaciones entre Clientes y Proyectos de forma segura y tipada."
 
-To learn more about Next.js, take a look at the following resources:
+2.  **"¿Cómo se conectan el Cliente y el Proyecto?"**
+    * *Tú:* "Es una relación de **Uno a Muchos (1:N)**. En el esquema de base de datos, el modelo `Cliente` tiene un array de proyectos, y el modelo `Proyecto` tiene una llave foránea `clienteId`."
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn-pages-router) - an interactive Next.js tutorial.
+3.  **"¿Dónde está el Backend?"**
+    * *Tú:* "Usamos la arquitectura **Serverless** de Next.js. Todo el backend vive en la carpeta `/pages/api`, donde creamos endpoints REST para comunicar el frontend con la base de datos."
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+---
 
-## Deploy on Vercel
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/pages/building-your-application/deploying) for more details.
+¿Hay algo más en lo que te pueda ayudar o ya cerramos sesión por hoy para que descanses?

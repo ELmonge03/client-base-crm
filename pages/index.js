@@ -1,17 +1,18 @@
 // pages/index.js
 import { useState, useEffect } from 'react';
+import Layout from '@/components/Layout'; 
+import { toast } from 'react-toastify';
+import { FaEdit, FaTrash, FaPlus, FaSave } from 'react-icons/fa';
+import ClienteRow from '@/components/ClienteRow';
+
 
 export default function Home() {
   const [clientes, setClientes] = useState([]);
-  // Estado para el formulario
   const [form, setForm] = useState({ nombre: '', email: '', empresa: '', telefono: '' });
   const [cargando, setCargando] = useState(false);
-  // Estado para saber si estamos editando (guardamos el ID del que se edita)
   const [clienteEditando, setClienteEditando] = useState(null);
 
-  useEffect(() => {
-    cargarClientes();
-  }, []);
+  useEffect(() => { cargarClientes(); }, []);
 
   const cargarClientes = async () => {
     const res = await fetch('/api/clientes');
@@ -20,67 +21,81 @@ export default function Home() {
   };
 
   const handleChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    // Validación de teléfono (solo números y max 15)
+    if (name === 'telefono') {
+        if (value && !/^\d*$/.test(value)) return;
+        if (value.length > 15) return;
+    }
+    setForm({ ...form, [name]: value });
   };
 
-  // --- FUNCIÓN INTELIGENTE: CREAR O ACTUALIZAR ---
+  const validarFormulario = () => {
+    const tieneNumeros = /\d/;
+    if (tieneNumeros.test(form.nombre)) {
+      toast.warning("El nombre no debe contener números.");
+      return false;
+    }
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(form.email)) {
+      toast.warning("Correo inválido.");
+      return false;
+    }
+    return true;
+  };
+
+  //const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!validarFormulario()) return;
+
     setCargando(true);
-
     try {
-      if (clienteEditando) {
-        // MODO EDICIÓN (PUT)
-        await fetch(`/api/clientes/${clienteEditando.id}`, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(form),
-        });
-        alert('¡Cliente actualizado!');
-      } else {
-        // MODO CREACIÓN (POST)
-        await fetch('/api/clientes', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(form),
-        });
-        alert('¡Cliente creado!');
-      }
+      const url = clienteEditando ? `/api/clientes/${clienteEditando.id}` : '/api/clientes';
+      const method = clienteEditando ? 'PUT' : 'POST';
 
-      // Limpiar todo después de guardar
-      setForm({ nombre: '', email: '', empresa: '', telefono: '' });
-      setClienteEditando(null);
-      cargarClientes();
-      
-    } catch (error) {
-      console.error(error);
-      alert('Ocurrió un error');
-    }
+      const res = await fetch(url, {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(form),
+      });
+
+      if (res.ok) {
+        toast.success(clienteEditando ? 'Cliente actualizado' : 'Cliente creado');
+        setForm({ nombre: '', email: '', empresa: '', telefono: '' });
+        setClienteEditando(null);
+        cargarClientes();
+      } else {
+        toast.error('Error al guardar.');
+      }
+    } catch (error) { toast.error('Error de conexión.'); }
     setCargando(false);
   };
 
-  // --- FUNCIÓN BORRAR ---
-  const deleteCliente = async (id) => {
-    if (!confirm('¿Seguro que quieres eliminar este cliente?')) return;
+ const deleteCliente = async (cliente) => {
+  const confirmacion = confirm(`¿Estás SEGURO de eliminar al cliente: ${cliente.nombre}?`);
+  
+  if (!confirmacion) return;
 
     try {
-      await fetch(`/api/clientes/${id}`, { method: 'DELETE' });
-      cargarClientes(); // Recargar la lista
+      const res = await fetch(`/api/clientes/${cliente.id}`, { method: 'DELETE' });
+      
+      if (res.ok) {
+        toast.success(`Cliente ${cliente.nombre} eliminado`);
+        cargarClientes();
+      } else {
+        toast.error("No se pudo eliminar.");
+      }
     } catch (error) {
       console.error(error);
     }
   };
 
-  // --- FUNCIÓN PREPARAR EDICIÓN ---
   const cargarDatosParaEditar = (cliente) => {
-    setForm({ 
-      nombre: cliente.nombre, 
-      email: cliente.email, 
-      empresa: cliente.empresa, 
-      telefono: cliente.telefono || '' 
-    });
+    setForm(cliente);
     setClienteEditando(cliente);
-    // Hacemos scroll hacia arriba suavemente para ver el formulario
+    toast.info(`Editando a: ${cliente.nombre}`);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
@@ -90,105 +105,76 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-100 p-10 font-sans">
-      <div className="max-w-4xl mx-auto">
-        <h1 className="text-4xl font-bold text-slate-800 mb-8 text-center">
-          ClientBase CRM 🚀
-        </h1>
-
-        {/* --- FORMULARIO --- */}
-        <div className={`p-8 rounded-xl shadow-lg mb-10 border transition-colors ${clienteEditando ? 'bg-yellow-50 border-yellow-300' : 'bg-white border-slate-200'}`}>
+    <Layout titulo="Gestión de Clientes">
+      <div className="max-w-4xl">
+        
+        {/* --- FORMULARIO OSCURO --- */}
+        <div className={`p-6 rounded-xl shadow-xl mb-8 border border-slate-700 transition-all ${
+          clienteEditando ? 'bg-blue-900/20 border-blue-500/50' : 'bg-slate-800'
+        }`}>
           <div className="flex justify-between items-center mb-4">
-            <h2 className="text-xl font-bold text-slate-700">
-              {clienteEditando ? '✏️ Editando Cliente' : '➕ Agregar Nuevo Cliente'}
-            </h2>
+            <h3 className="text-xl font-semibold text-slate-100 flex items-center gap-2">
+              {clienteEditando ? <FaEdit className="text-blue-400"/> : <FaPlus className="text-green-400"/>}
+              {clienteEditando ? 'Editar Cliente' : 'Nuevo Cliente'}
+            </h3>
             {clienteEditando && (
-              <button onClick={cancelarEdicion} className="text-sm text-gray-500 underline hover:text-gray-800">
-                Cancelar Edición
+              <button onClick={cancelarEdicion} className="text-sm text-slate-400 hover:text-white underline">
+                Cancelar
               </button>
             )}
           </div>
-          
+
           <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <input
-              className="border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-black"
-              name="nombre" placeholder="Nombre Completo" required
-              value={form.nombre} onChange={handleChange}
-            />
-            <input
-              className="border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-black"
-              name="email" type="email" placeholder="Correo Electrónico" required
-              value={form.email} onChange={handleChange}
-            />
-            <input
-              className="border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-black"
-              name="empresa" placeholder="Empresa / Negocio" required
-              value={form.empresa} onChange={handleChange}
-            />
-            <input
-              className="border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-black"
-              name="telefono" placeholder="Teléfono"
-              value={form.telefono} onChange={handleChange}
-            />
+            {['nombre', 'email', 'empresa', 'telefono'].map((campo) => (
+              <input
+                key={campo}
+                name={campo}
+                placeholder={campo.charAt(0).toUpperCase() + campo.slice(1)}
+                value={form[campo] || ''}
+                onChange={handleChange}
+                required={campo !== 'telefono'}
+                className="bg-slate-900 border border-slate-700 text-white rounded-lg p-3 focus:ring-2 focus:ring-blue-500 outline-none transition-all placeholder-slate-500"
+              />
+            ))}
+            
             <button 
               type="submit" 
               disabled={cargando}
-              className={`md:col-span-2 text-white font-bold py-3 rounded-lg transition-colors ${clienteEditando ? 'bg-yellow-500 hover:bg-yellow-600' : 'bg-blue-600 hover:bg-blue-700'}`}
+              className={`md:col-span-2 py-3 rounded-lg font-bold shadow-lg transition-all flex items-center justify-center gap-2 ${
+                clienteEditando 
+                ? 'bg-blue-600 hover:bg-blue-500 text-white' 
+                : 'bg-green-600 hover:bg-green-500 text-white'
+              }`}
             >
-              {cargando ? 'Procesando...' : (clienteEditando ? 'Guardar Cambios' : 'Guardar Cliente')}
+              <FaSave /> {cargando ? 'Procesando...' : (clienteEditando ? 'Actualizar Cliente' : 'Guardar Cliente')}
             </button>
           </form>
         </div>
 
-        {/* --- TABLA DE DATOS --- */}
-        <div className="bg-white rounded-xl shadow-lg overflow-hidden border border-slate-200">
-          <div className="bg-slate-50 p-4 border-b border-slate-200">
-            <h2 className="text-xl font-bold text-slate-700">Cartera de Clientes ({clientes.length})</h2>
-          </div>
-          
+        {/* --- TABLA OSCURA --- */}
+        <div className="bg-slate-800 rounded-xl shadow-xl overflow-hidden border border-slate-700">
           {clientes.length === 0 ? (
-            <div className="p-8 text-center text-gray-500">
-              No hay clientes registrados aún.
+            <div className="p-10 text-center text-slate-400">
+              No hay clientes registrados.
             </div>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-left">
-                <thead className="bg-slate-100 text-slate-600 uppercase text-sm font-semibold">
+                <thead className="bg-slate-900 text-slate-400 uppercase text-xs font-bold tracking-wider">
                   <tr>
-                    <th className="p-4">Nombre</th>
-                    <th className="p-4">Empresa</th>
+                    <th className="p-4">Nombre / Empresa</th>
                     <th className="p-4">Contacto</th>
                     <th className="p-4 text-center">Acciones</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-100">
+                <tbody className="divide-y divide-slate-700">
                   {clientes.map((cliente) => (
-                    <tr key={cliente.id} className="hover:bg-slate-50 transition-colors text-black">
-                      <td className="p-4 font-medium">{cliente.nombre}</td>
-                      <td className="p-4">
-                        <span className="bg-blue-100 text-blue-800 py-1 px-3 rounded-full text-xs font-bold">
-                          {cliente.empresa}
-                        </span>
-                      </td>
-                      <td className="p-4 text-sm text-gray-600">
-                        <div>{cliente.email}</div>
-                        <div>{cliente.telefono}</div>
-                      </td>
-                      <td className="p-4 text-center space-x-2">
-                        <button 
-                          onClick={() => cargarDatosParaEditar(cliente)}
-                          className="bg-yellow-100 text-yellow-700 px-3 py-1 rounded text-sm font-bold hover:bg-yellow-200"
-                        >
-                          Editar
-                        </button>
-                        <button 
-                          onClick={() => deleteCliente(cliente.id)}
-                          className="bg-red-100 text-red-700 px-3 py-1 rounded text-sm font-bold hover:bg-red-200"
-                        >
-                          Borrar
-                        </button>
-                      </td>
-                    </tr>
+                    <ClienteRow
+                      key={cliente.id}
+                      cliente={cliente}
+                      onEdit={cargarDatosParaEditar}
+                      onDelete={deleteCliente}
+                    />
                   ))}
                 </tbody>
               </table>
@@ -196,6 +182,6 @@ export default function Home() {
           )}
         </div>
       </div>
-    </div>
+    </Layout>
   );
 }

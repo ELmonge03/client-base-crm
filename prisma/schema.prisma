@@ -16,4 +16,18 @@ model Cliente {
   empresa   String
   telefono  String?
   createdAt DateTime @default(now())
+  
+  // RELACIÓN: Un cliente tiene muchos proyectos
+  proyectos Proyecto[] 
+}
+
+model Proyecto {
+  id          Int      @id @default(autoincrement())
+  nombre      String
+  descripcion String?
+  status      String   @default("Pendiente") // Ej: Pendiente, En Progreso, Terminado
+  
+  // RELACIÓN CON CLIENTE
+  clienteId   Int
+  cliente     Cliente  @relation(fields: [clienteId], references: [id], onDelete: Cascade)
 }
